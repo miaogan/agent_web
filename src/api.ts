@@ -1,6 +1,8 @@
 import type { AgentConfig, ChatRequest, ResumeRequest, SseEvent } from './types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+// Use empty string for same-origin requests (when served by backend)
+// Fallback to localhost:8001 for development
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 export async function fetchAgents(): Promise<AgentConfig[]> {
   const res = await fetch(`${API_BASE}/agents`);
