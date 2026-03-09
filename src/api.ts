@@ -1,4 +1,4 @@
-import type { AgentConfig, ChatRequest, ResumeRequest, SseEvent } from './types';
+import type { AgentConfig, ChatRequest, ResumeRequest, SseEvent, HistoryRequest, HistoryResponse } from './types';
 
 // Use empty string for same-origin requests (when served by backend)
 // Fallback to localhost:8001 for development
@@ -15,6 +15,16 @@ export async function fetchModels(): Promise<string[]> {
   if (!res.ok) throw new Error(`Failed to fetch models: ${res.statusText}`);
   const data = await res.json();
   return data.models;
+}
+
+export async function fetchHistory(request: HistoryRequest): Promise<HistoryResponse> {
+  const res = await fetch(`${API_BASE}/chat/history`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) throw new Error(`Failed to fetch history: ${res.statusText}`);
+  return res.json();
 }
 
 export interface ChatStreamOptions {

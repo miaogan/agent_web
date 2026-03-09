@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { InterruptInfo, Message, ToolCallInfo } from './types';
-import { chatStream, resumeStream } from './api';
+import { chatStream, resumeStream, fetchHistory } from './api';
 
 interface ChatPanelProps {
   agentId: string;
@@ -11,9 +11,60 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeInterrupt, setActiveInterrupt] = useState<{ agentId: string; interrupt: InterruptInfo } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
+
+  // Load history when threadId changes
+  useEffect(() => {
+    const loadHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const response = await fetchHistory({ thread_id: threadId });
+        if (response.messages.length > 0) {
+          // Convert history messages to UI Message format
+          const historyMessages: Message[] = [];
+          
+          for (const msg of response.messages) {
+            // Skip tool messages in UI (they're part of assistant messages)
+            if (msg.role === 'tool') continue;
+            
+            const uiMessage: Message = {
+              id: `history-${historyMessages.length}`,
+              role: msg.role === 'system' ? 'assistant' : msg.role,
+              content: msg.content,
+              timestamp: new Date(),
+              toolCalls: msg.tool_calls,
+            };
+            
+            // Merge consecutive messages of same role
+            const lastMessage = historyMessages[historyMessages.length - 1];
+            if (lastMessage && lastMessage.role === uiMessage.role) {
+              // Append content
+              lastMessage.content += '\n' + uiMessage.content;
+              // Merge tool calls
+              if (uiMessage.toolCalls && lastMessage.toolCalls) {
+                lastMessage.toolCalls.push(...uiMessage.toolCalls);
+              } else if (uiMessage.toolCalls) {
+                lastMessage.toolCalls = uiMessage.toolCalls;
+              }
+            } else {
+              historyMessages.push(uiMessage);
+            }
+          }
+          
+          setMessages(historyMessages);
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [threadId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -208,6 +259,11 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
   return (
     <div className="chat-panel">
       <div className="messages">
+        {isLoadingHistory && (
+          <div className="history-loading">
+            <span>📜 加载历史消息...</span>
+          </div>
+        )}
         {messages.map((msg) => (
           <div key={msg.id} className={`message ${msg.role}`}>
             <div className="message-header">

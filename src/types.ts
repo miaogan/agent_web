@@ -45,6 +45,26 @@ export interface InterruptInfo {
   allowed_decisions: string[];
 }
 
+// History Types
+export interface HistoryRequest {
+  thread_id: string;
+  limit?: number;
+}
+
+export interface MessageItem {
+  role: 'user' | 'assistant' | 'tool' | 'system';
+  content: string;
+  tool_calls?: ToolCallInfo[];
+  tool_call_id?: string;
+}
+
+export interface HistoryResponse {
+  thread_id: string;
+  messages: MessageItem[];
+  total_checkpoints: number;
+  has_more: boolean;
+}
+
 // SSE Event Types
 export type SseEvent =
   | { type: 'delta'; content: string }
