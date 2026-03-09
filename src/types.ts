@@ -77,6 +77,7 @@ export interface ToolCallInfo {
   tool: string;
   args: Record<string, unknown>;
   tool_call_id: string;
+  result?: string; // Tool execution result from tool message
 }
 
 // UI Types

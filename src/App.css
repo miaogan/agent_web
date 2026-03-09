@@ -193,6 +193,17 @@ body {
   word-break: break-word;
 }
 
+.message-content .text-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message-content .empty-content {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 13px;
+}
+
 .streaming {
   animation: pulse 1s infinite;
 }
@@ -235,6 +246,28 @@ body {
   padding: 8px;
   border-radius: 6px;
   overflow-x: auto;
+}
+
+.tool-result {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.tool-result .result-label {
+  display: block;
+  color: var(--success);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.tool-result .result-content {
+  font-size: 11px;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 8px;
+  border-radius: 6px;
+  overflow-x: auto;
+  color: var(--text-secondary);
 }
 
 /* Interrupt Panel */

@@ -25,9 +25,19 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
         if (response.messages.length > 0) {
           // Convert history messages to UI Message format
           const historyMessages: Message[] = [];
+          // Track tool results by tool_call_id for later association
+          const toolResults = new Map<string, string>();
           
+          // First pass: collect tool results
           for (const msg of response.messages) {
-            // Skip tool messages in UI (they're part of assistant messages)
+            if (msg.role === 'tool' && msg.tool_call_id && msg.content) {
+              toolResults.set(msg.tool_call_id, msg.content);
+            }
+          }
+          
+          // Second pass: build UI messages
+          for (const msg of response.messages) {
+            // Skip tool messages - their results are associated with assistant messages
             if (msg.role === 'tool') continue;
             
             const uiMessage: Message = {
@@ -35,7 +45,10 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
               role: msg.role === 'system' ? 'assistant' : msg.role,
               content: msg.content,
               timestamp: new Date(),
-              toolCalls: msg.tool_calls,
+              toolCalls: msg.tool_calls?.map(tc => ({
+                ...tc,
+                result: toolResults.get(tc.tool_call_id),
+              })),
             };
             
             // Merge consecutive messages of same role
@@ -271,7 +284,11 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
               <span className="time">{msg.timestamp.toLocaleTimeString()}</span>
             </div>
             <div className="message-content">
-              {msg.content || (msg.isStreaming && <span className="streaming">●●●</span>)}
+              {msg.content && <div className="text-content">{msg.content}</div>}
+              {!msg.content && !msg.isStreaming && !msg.toolCalls?.length && (
+                <span className="empty-content">（无内容）</span>
+              )}
+              {msg.isStreaming && <span className="streaming">●●●</span>}
               {msg.toolCalls && msg.toolCalls.length > 0 && (
                 <div className="tool-calls">
                   {msg.toolCalls.map((tc, i) => (
@@ -334,7 +351,15 @@ function ToolCallBadge({ toolCall }: { toolCall: ToolCallInfo }) {
     <div className="tool-call-badge" onClick={() => setExpanded(!expanded)}>
       <span className="tool-name">🔧 {toolCall.tool}</span>
       {expanded && (
-        <pre className="tool-args">{JSON.stringify(toolCall.args, null, 2)}</pre>
+        <>
+          <pre className="tool-args">{JSON.stringify(toolCall.args, null, 2)}</pre>
+          {toolCall.result && (
+            <div className="tool-result">
+              <span className="result-label">📤 执行结果:</span>
+              <pre className="result-content">{toolCall.result}</pre>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
