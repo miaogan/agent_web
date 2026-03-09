@@ -129,8 +129,8 @@ export function ChatPanel({ agentId, threadId }: ChatPanelProps) {
     setActiveInterrupt(null);
 
     resumeStream({
-      agentId: intAgentId,
       request: {
+        agent_id: intAgentId,
         decision,
         tool_call_id: interrupt.tool_call_id,
         thread_id: threadId,

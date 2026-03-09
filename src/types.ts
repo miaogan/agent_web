@@ -29,6 +29,7 @@ export interface ChatRequest {
 }
 
 export interface ResumeRequest {
+  agent_id: string;
   decision: 'approve' | 'reject' | 'edit';
   tool_call_id: string;
   tool_name?: string;

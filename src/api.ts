@@ -26,8 +26,7 @@ export function chatStream({ request, onEvent, onError, signal }: ChatStreamOpti
   const controller = new AbortController();
   const abortSignal = signal || controller.signal;
   
-  const agentPath = request.agent_id ? `/${request.agent_id}` : '';
-  const url = `${API_BASE}/chat${agentPath}/stream`;
+  const url = `${API_BASE}/chat/stream`;
   
   fetch(url, {
     method: 'POST',
@@ -79,18 +78,17 @@ export function chatStream({ request, onEvent, onError, signal }: ChatStreamOpti
 }
 
 export interface ResumeStreamOptions {
-  agentId: string;
   request: ResumeRequest;
   onEvent: (event: SseEvent) => void;
   onError: (error: Error) => void;
   signal?: AbortSignal;
 }
 
-export function resumeStream({ agentId, request, onEvent, onError, signal }: ResumeStreamOptions): () => void {
+export function resumeStream({ request, onEvent, onError, signal }: ResumeStreamOptions): () => void {
   const controller = new AbortController();
   const abortSignal = signal || controller.signal;
   
-  const url = `${API_BASE}/chat/${agentId}/resume`;
+  const url = `${API_BASE}/chat/resume`;
   
   fetch(url, {
     method: 'POST',
